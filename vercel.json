@@ -4,16 +4,6 @@
       "maxDuration": 60
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron/daily",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/hourly",
-      "schedule": "0 * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
