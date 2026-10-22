@@ -31,32 +31,59 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        console.log('=== AUTH START ===')
+        console.log('Credentials received:', { email: credentials?.email, hasPassword: !!credentials?.password })
+        
         if (!credentials?.email || !credentials?.password) {
           console.log('Missing credentials')
           return null
         }
 
-        console.log('Auth attempt for:', credentials.email)
-
         try {
+          console.log('Creating Supabase client...')
           const supabase = await createClient()
+          console.log('Supabase client created')
+
+          console.log('Querying users table for:', credentials.email)
           const { data: user, error } = await supabase
             .from('users')
             .select('*')
             .eq('email', credentials!.email)
             .single()
 
-          console.log('DB query result:', { error: error?.message, userFound: !!user })
+          console.log('DB result:', { 
+            error: error?.message, 
+            errorCode: error?.code,
+            userFound: !!user,
+            userKeys: user ? Object.keys(user) : null
+          })
 
-          if (error || !user) {
-            console.log('User not found or DB error')
+          if (error) {
+            console.error('DB error:', error)
             return null
           }
 
-          console.log('User data:', { id: user.id, email: user.email, role: user.role, tenant_id: user.tenant_id, hasPasswordHash: !!user.password_hash })
+          if (!user) {
+            console.log('No user found')
+            return null
+          }
 
+          console.log('User data:', { 
+            id: user.id, 
+            email: user.email, 
+            role: user.role, 
+            tenant_id: user.tenant_id, 
+            hasPasswordHash: !!user.password_hash,
+            passwordHashPreview: user.password_hash?.substring(0, 20)
+          })
+
+          if (!user.password_hash) {
+            console.error('No password hash!')
+            return null
+          }
+
+          console.log('Comparing password...')
           const isValid = await bcrypt.compare(credentials!.password, user.password_hash)
-
           console.log('Password valid:', isValid)
 
           if (!isValid) {
@@ -64,6 +91,7 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
+          console.log('=== AUTH SUCCESS ===')
           return {
             id: user.id,
             email: user.email,
@@ -72,14 +100,16 @@ export const authOptions: NextAuthOptions = {
             tenantId: user.tenant_id
           }
         } catch (err) {
-          console.error('Auth error:', err)
+          console.error('=== AUTH EXCEPTION ===', err)
+          console.error('Stack:', err instanceof Error ? err.stack : 'no stack')
           return null
         }
       }
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      console.log('JWT callback:', { hasToken: !!token, hasUser: !!user, trigger })
       if (user) {
         const u = user as any
         token.id = u.id
@@ -89,10 +119,11 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id
-        session.user.role = token.role
-        session.user.tenantId = token.tenantId
+      console.log('Session callback:', { hasSession: !!session, hasToken: !!token })
+      if (session.user && token) {
+        session.user.id = token.id as string
+        session.user.role = token.role as string
+        session.user.tenantId = token.tenantId as string
       }
       return session
     }
@@ -101,5 +132,6 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/login'
   },
-  secret: process.env.NEXTAUTH_SECRET
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: true
 }
