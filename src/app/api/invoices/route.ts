@@ -1,10 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createResourceRoutes } from '@/lib/api/factory'
 import { z } from 'zod'
 
-const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
+const { GET, POST } = createResourceRoutes({
   tableName: 'invoices',
   createSchema: z.object({
     type: z.enum(['SALES', 'PURCHASE', 'CREDIT_NOTE', 'DEBIT_NOTE', 'PROFORMA', 'RECURRING', 'ADVANCE', 'DEPOSIT', 'FINAL', 'CORRECTION']).optional().default('SALES'),
@@ -39,11 +36,11 @@ const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
       tax_percent: z.number().min(0).max(100).optional().default(0),
       tax_amount: z.number().min(0).optional().default(0),
       total_amount: z.number().positive(),
-      account_id: z.string().uuid().optional(),
-      cost_center_id: z.string().uuid().optional(),
-      project_id: z.string().uuid().optional(),
-      quantity: z.number().positive().optional(),
-      unit: z.string().optional(),
+      commodity_code: z.string().optional(),
+      weight: z.number().positive().optional(),
+      volume: z.number().positive().optional(),
+      origin: z.string().optional(),
+      destination: z.string().optional(),
     })).min(1),
   }),
   updateSchema: z.object({

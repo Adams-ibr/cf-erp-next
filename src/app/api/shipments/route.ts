@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 
-const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
+const { GET, POST } = createResourceRoutes({
   tableName: 'shipments',
   createSchema: z.object({
     reference: z.string().optional(),
@@ -48,7 +48,7 @@ const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
   }),
   updateSchema: z.object({
     reference: z.string().optional(),
-    type: z.enum(['FCL', 'LCL', 'AIR', 'ROAD', 'RAIL', 'MULTIMODAL', 'COURIER', 'BREAKBULK', 'RO_RO', 'PROJECT']).optional(),
+    type: z.enum(['FCL', 'LCL', 'AIR', 'ROAD', 'RAIL', 'MULTIMODAL', 'COURIER']).optional(),
     mode: z.enum(['SEA_FCL', 'SEA_LCL', 'AIR', 'ROAD', 'RAIL', 'MULTIMODAL', 'COURIER']).optional(),
     direction: z.enum(['IMPORT', 'EXPORT', 'TRANSIT', 'CROSS_TRADE', 'DOMESTIC']).optional(),
     incoterm: z.enum(['EXW', 'FCA', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP', 'FAS', 'FOB', 'CFR', 'CIF']).optional(),
@@ -57,7 +57,6 @@ const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
     customer_id: z.string().uuid().optional(),
     supplier_id: z.string().uuid().optional(),
     carrier_id: z.string().uuid().optional(),
-    booking_id: z.string().uuid().optional(),
     route_id: z.string().uuid().optional(),
     origin: z.string().optional(),
     destination: z.string().optional(),
@@ -83,7 +82,6 @@ const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
     notes: z.string().optional(),
     internal_notes: z.string().optional(),
     terms: z.string().optional(),
-    status: z.enum(['DRAFT', 'QUOTE_REQUESTED', 'QUOTED', 'BOOKED', 'CONFIRMED', 'DOCUMENTS_PENDING', 'DOCUMENTS_RECEIVED', 'CUSTOMS_PENDING', 'CUSTOMS_CLEARED', 'CUSTOMS_HOLD', 'CUSTOMS_EXAM', 'LOADED', 'IN_TRANSIT', 'ARRIVED', 'UNLOADED', 'DELIVERED', 'COMPLETED', 'CANCELLED', 'ON_HOLD', 'PROBLEM']).optional(),
   }),
 })
 

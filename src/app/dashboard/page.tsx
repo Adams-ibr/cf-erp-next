@@ -114,7 +114,7 @@ export default function Dashboard() {
             <StatCard title="Total Customers" value="1,234" change="+12%" icon="👥" />
             <StatCard title="Active Shipments" value="56" change="+3" icon="🚢" />
             <StatCard title="Pending Invoices" value="23" change="-2" icon="📄" />
-            <StatCard title: "Revenue This Month" value="$127,450" change="+8.5%" icon="💰" />
+            <StatCard title="Revenue This Month" value="$127,450" change="+8.5%" icon="💰" />
           </div>
 
           {/* Quick Actions */}
@@ -166,7 +166,7 @@ export default function Dashboard() {
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">SHP-2024-001</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Acme Corp</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Shanghai → LA</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Shanghai → Los Angeles</td>
                     <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">In Transit</span></td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 15, 2024</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -177,7 +177,7 @@ export default function Dashboard() {
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">SHP-2024-002</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Global Logistics</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Shenzhen → NY</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Shenzhen → New York</td>
                     <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Customs</span></td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 20, 2024</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

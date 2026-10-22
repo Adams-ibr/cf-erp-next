@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -8,12 +7,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { getServerSession } = await import('next-auth')
+    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createClient()
+    const supabase = (await import('@/lib/supabase/server')).createClient()
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -37,12 +38,14 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { getServerSession } = await import('next-auth')
+    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createClient()
+    const supabase = (await import('@/lib/supabase/server')).createClient()
     const body = await request.json()
 
     const { data, error } = await supabase
@@ -70,12 +73,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { getServerSession } = await import('next-auth')
+    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createClient()
+    const supabase = (await import('@/lib/supabase/server')).createClient()
     const { error } = await supabase
       .from('customers')
       .delete()

@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 
-const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
+const { GET, POST } = createResourceRoutes({
   tableName: 'quotes',
   createSchema: z.object({
     customer_id: z.string().uuid(),
@@ -23,7 +23,10 @@ const { GET, POST } = (await import('@/lib/api/factory')).createResourceRoutes({
       unit: z.string(),
       unit_price: z.number().positive(),
       discount_percent: z.number().min(0).max(100).optional().default(0),
+      discount_amount: z.number().min(0).optional().default(0),
       tax_percent: z.number().min(0).max(100).optional().default(0),
+      tax_amount: z.number().min(0).optional().default(0),
+      total_amount: z.number().positive(),
       commodity_code: z.string().optional(),
       weight: z.number().positive().optional(),
       volume: z.number().positive().optional(),

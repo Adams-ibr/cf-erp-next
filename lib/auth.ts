@@ -1,16 +1,5 @@
-import { NextAuthOptions } from 'next-auth'
-import { SupabaseAdapter } from '@auth/supabase-adapter'
-import { createClient } from '@supabase/supabase-js'
-
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [],
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  }),
-  session: {
-    strategy: 'jwt',
-  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -32,9 +21,4 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
-}
-
-export async function getServerSession() {
-  const { getServerSession } = await import('next-auth')
-  return getServerSession(authOptions)
 }

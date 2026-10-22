@@ -95,13 +95,12 @@ export default function CustomersPage() {
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Add Customer
           </Link>
         </div>
 
-        {/* Search and Filters */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative">
             <input
@@ -117,7 +116,6 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        {/* Customers Table */}
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -176,12 +174,11 @@ export default function CustomersPage() {
                       </button>
                     </td>
                   </tr>
-                ))
+                ))}
               )}
             </tbody>
           </table>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
               <div className="text-sm text-gray-700">
