@@ -21,6 +21,7 @@ export default function LoginForm() {
     setLoading(true)
 
     try {
+      console.log('Attempting signIn with:', { email, callbackUrl })
       const result = await signIn('credentials', {
         email,
         password,
@@ -28,12 +29,22 @@ export default function LoginForm() {
         callbackUrl,
       })
 
+      console.log('signIn result:', result)
+
       if (result?.error) {
+        console.log('signIn error:', result.error)
         setError('Invalid email or password')
-      } else {
+      } else if (result?.ok) {
+        console.log('signIn ok, redirecting to:', callbackUrl)
         router.push(callbackUrl)
+        router.refresh()
+      } else {
+        console.log('Unexpected result:', result)
+        router.push(callbackUrl)
+        router.refresh()
       }
     } catch (error) {
+      console.error('signIn exception:', error)
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
