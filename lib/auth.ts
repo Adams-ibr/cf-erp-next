@@ -31,8 +31,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('=== AUTH START ===')
-        console.log('Credentials received:', { email: credentials?.email, hasPassword: !!credentials?.password })
+        console.log('=== AUTH START ===', { 
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30),
+          hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          hasSecret: !!process.env.NEXTAUTH_SECRET
+        })
         
         if (!credentials?.email || !credentials?.password) {
           console.log('Missing credentials')
@@ -44,17 +47,21 @@ export const authOptions: NextAuthOptions = {
           const supabase = await createClient()
           console.log('Supabase client created')
 
-          console.log('Querying users table for:', credentials.email)
+          const email = credentials!.email.toLowerCase().trim()
+          console.log('Querying for email:', email)
+
+          // Try with exact match first
           const { data: user, error } = await supabase
             .from('users')
             .select('*')
-            .eq('email', credentials!.email)
+            .ilike('email', email)
             .single()
 
           console.log('DB result:', { 
             error: error?.message, 
             errorCode: error?.code,
             userFound: !!user,
+            userEmail: user?.email,
             userKeys: user ? Object.keys(user) : null
           })
 
@@ -64,7 +71,14 @@ export const authOptions: NextAuthOptions = {
           }
 
           if (!user) {
-            console.log('No user found')
+            console.log('No user found with ilike, trying exact...')
+            const { data: user2, error: error2 } = await supabase
+              .from('users')
+              .select('*')
+              .eq('email', email)
+              .single()
+            console.log('Exact match result:', { error: error2?.message, userFound: !!user2 })
+            if (user2) return user2
             return null
           }
 
@@ -108,8 +122,7 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      console.log('JWT callback:', { hasToken: !!token, hasUser: !!user, trigger })
+    async jwt({ token, user }) {
       if (user) {
         const u = user as any
         token.id = u.id
@@ -119,7 +132,6 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      console.log('Session callback:', { hasSession: !!session, hasToken: !!token })
       if (session.user && token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
