@@ -101,6 +101,7 @@ export default function CustomersPage() {
           </Link>
         </div>
 
+        {/* Search and Filters */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative">
             <input
@@ -116,6 +117,7 @@ export default function CustomersPage() {
           </div>
         </div>
 
+        {/* Customers Table */}
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -179,6 +181,7 @@ export default function CustomersPage() {
             </tbody>
           </table>
 
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
               <div className="text-sm text-gray-700">

@@ -1,8 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import { SupabaseAdapter } from '@auth/supabase-adapter'
-import { createClient } from '@supabase/supabase-js'
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [],
   adapter: SupabaseAdapter({
     url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
