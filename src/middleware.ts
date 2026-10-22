@@ -17,16 +17,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
           response.cookies.set({
             name,
             value,
@@ -34,16 +24,6 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
           response.cookies.set({
             name,
             value: '',
@@ -58,8 +38,20 @@ export async function middleware(request: NextRequest) {
 
   // Protect API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    if (!request.headers.get('authorization') && !request.cookies.get('sb-access-token')) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  }
+
+  // Protect dashboard routes
+  if (request.nextUrl.pathname.startsWith('/dashboard') || 
+      request.nextUrl.pathname.startsWith('/customers') ||
+      request.nextUrl.pathname.startsWith('/suppliers') ||
+      request.nextUrl.pathname.startsWith('/shipments') ||
+      request.nextUrl.pathname.startsWith('/invoices') ||
+      request.nextUrl.pathname.startsWith('/quotes')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
@@ -74,7 +66,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - login page
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.ico$|public/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.ico$|public/|login).*)',
   ],
 }
