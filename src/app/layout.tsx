@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CF-ERP",
-  description: "Clearing & Forwarding ERP System",
+  title: "Forwardex",
+  description: "Forwarding & Logistics ERP System",
 };
 
 export default function RootLayout({
