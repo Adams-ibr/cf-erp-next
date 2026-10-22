@@ -71,7 +71,7 @@ export default function Dashboard() {
             <span>Sign Out</span>
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Mobile overlay */}
       <div

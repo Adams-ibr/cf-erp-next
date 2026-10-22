@@ -82,6 +82,62 @@ export default function CustomersPage() {
     return <div className="min-h-screen flex items-center justify-center">Redirecting...</div>
   }
 
+  const renderTableBody = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan={7} className="px-6 py-12 text-center">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          </td>
+        </tr>
+      )
+    }
+
+    if (customers.length === 0) {
+      return (
+        <tr>
+          <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+            No customers found. <Link href="/customers/new" className="text-blue-600 hover:underline">Create one</Link>
+          </td>
+        </tr>
+      )
+    }
+
+    return customers.map((customer) => (
+      <tr key={customer.id} className="hover:bg-gray-50">
+        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.code}</td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{customer.name}</td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.email || '-'}</td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.phone || '-'}</td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            customer.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+            customer.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
+            customer.status === 'PROSPECT' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {customer.status}
+          </span>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          {new Date(customer.created_at).toLocaleDateString()}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <Link href={`/customers/${customer.id}`} className="text-blue-600 hover:text-blue-900 mr-3">View</Link>
+          <Link href={`/customers/${customer.id}/edit`} className="text-blue-600 hover:text-blue-900 ml-3">Edit</Link>
+          <button
+            onClick={() => handleDelete(customer.id)}
+            className="text-red-600 hover:text-red-900 ml-3"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+    ))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -132,52 +188,7 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
-                    <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                  </tr>
-                ) : customers.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    No customers found. <Link href="/customers/new" className="text-blue-600 hover:underline">Create one</Link>
-                  </td>
-                </tr>
-              ) : (
-                customers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.code}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{customer.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.email || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.phone || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        customer.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                        customer.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
-                        customer.status === 'PROSPECT' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {customer.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(customer.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/customers/${customer.id}`} className="text-blue-600 hover:text-blue-900 mr-3">View</Link>
-                      <Link href={`/customers/${customer.id}/edit`} className="text-blue-600 hover:text-blue-900 ml-3">Edit</Link>
-                      <button
-                        onClick={() => handleDelete(customer.id)}
-                        className="text-red-600 hover:text-red-900 ml-3"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              )}
+              {renderTableBody()}
             </tbody>
           </table>
 

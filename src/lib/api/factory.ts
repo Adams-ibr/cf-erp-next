@@ -1,9 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { PaginationDto } from '@/lib/shared/dto'
 
 export interface ResourceConfig {
   tableName: string
@@ -20,14 +18,13 @@ export function createResourceRoutes(config: {
 
   async function GET(request: NextRequest) {
     try {
-      const { getServerSession } = await import('next-auth')
-      const { authOptions } = await import('@/lib/auth')
       const session = await getServerSession(authOptions)
       if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      const supabase = (await import('@/lib/supabase/server')).createClient()
+      const { createClient } = await import('@/lib/supabase/server')
+      const supabase = await createClient()
       const { searchParams } = new URL(request.url)
       
       const page = parseInt(searchParams.get('page') || '1')
@@ -47,10 +44,7 @@ export function createResourceRoutes(config: {
         query = query.ilike('name', `%${search}%`)
       }
 
-      const [data, error, count] = await Promise.all([
-        query,
-        supabase.from(config.tableName).select('*', { count: 'exact', head: true }).eq('tenant_id', (session.user as any).tenantId),
-      ])
+      const { data, error, count } = await query
 
       if (error) throw error
 
@@ -69,24 +63,25 @@ export function createResourceRoutes(config: {
 
   async function POST(request: NextRequest) {
     try {
-      const { getServerSession } = await import('next-auth')
-      const { authOptions } = await import('@/lib/auth')
       const session = await getServerSession(authOptions)
       if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      const supabase = (await import('@/lib/supabase/server')).createClient()
+      const { createClient } = await import('@/lib/supabase/server')
+      const supabase = await createClient()
       const body = await request.json()
-      const data = createSchema.parse(body)
+      const parsedData = createSchema.parse(body)
+
+      const insertData = {
+        ...(parsedData as Record<string, unknown>),
+        tenant_id: (session.user as any).tenantId,
+        created_by: (session.user as any).id,
+      }
 
       const { data: result, error } = await supabase
         .from(config.tableName)
-        .insert({
-          ...data,
-          tenant_id: (session.user as any).tenantId,
-          created_by: (session.user as any).id,
-        })
+        .insert(insertData)
         .select()
         .single()
 
@@ -95,7 +90,7 @@ export function createResourceRoutes(config: {
       return NextResponse.json(result, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: error.errors }, { status: 400 })
+        return NextResponse.json({ error: error.issues }, { status: 400 })
       }
       console.error(`Error creating ${config.tableName}:`, error)
       return NextResponse.json({ error: `Failed to create ${config.tableName}` }, { status: 500 })

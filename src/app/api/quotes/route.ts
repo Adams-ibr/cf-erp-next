@@ -1,7 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createResourceRoutes } from '@/lib/api/factory'
 import { z } from 'zod'
 
 const { GET, POST } = createResourceRoutes({

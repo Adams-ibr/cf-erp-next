@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { getServerSession } = await import('next-auth')
-    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = (await import('@/lib/supabase/server')).createClient()
+    const { id } = await params
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('invoices')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('tenant_id', (session.user as any).tenantId)
       .single()
 
@@ -35,17 +35,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { getServerSession } = await import('next-auth')
-    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = (await import('@/lib/supabase/server')).createClient()
+    const { id } = await params
+    const supabase = await createClient()
     const body = await request.json()
 
     const { data, error } = await supabase
@@ -54,7 +53,7 @@ export async function PUT(
         ...body,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('tenant_id', (session.user as any).tenantId)
       .select()
       .single()
@@ -70,21 +69,20 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { getServerSession } = await import('next-auth')
-    const { authOptions } = await import('@/lib/auth')
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = (await import('@/lib/supabase/server')).createClient()
+    const { id } = await params
+    const supabase = await createClient()
     const { error } = await supabase
       .from('invoices')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('tenant_id', (session.user as any).tenantId)
 
     if (error) throw error
