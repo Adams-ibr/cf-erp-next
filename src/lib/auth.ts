@@ -32,8 +32,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log('Missing credentials')
           return null
         }
+
+        console.log('Auth attempt for:', credentials.email)
 
         const supabase = await createClient()
         const { data: user, error } = await supabase
@@ -42,12 +45,24 @@ export const authOptions: NextAuthOptions = {
           .eq('email', credentials!.email)
           .single()
 
-        if (error || !user) return null
+        console.log('DB query result:', { error: error?.message, userFound: !!user })
+
+        if (error || !user) {
+          console.log('User not found or DB error')
+          return null
+        }
+
+        console.log('User data:', { id: user.id, email: user.email, role: user.role, tenant_id: user.tenant_id, hasPasswordHash: !!user.password_hash })
 
         const bcrypt = await import('bcryptjs')
         const isValid = await bcrypt.compare(credentials!.password, user.password_hash)
 
-        if (!isValid) return null
+        console.log('Password valid:', isValid)
+
+        if (!isValid) {
+          console.log('Invalid password')
+          return null
+        }
 
         return {
           id: user.id,
