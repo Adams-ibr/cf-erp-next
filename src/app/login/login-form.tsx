@@ -36,12 +36,20 @@ export default function LoginForm() {
         setError('Invalid email or password')
       } else if (result?.ok) {
         console.log('signIn ok, redirecting to:', callbackUrl)
+        // Try router first
         router.push(callbackUrl)
         router.refresh()
+        // Fallback to hard redirect after short delay
+        setTimeout(() => {
+          window.location.href = callbackUrl
+        }, 100)
       } else {
         console.log('Unexpected result:', result)
         router.push(callbackUrl)
         router.refresh()
+        setTimeout(() => {
+          window.location.href = callbackUrl
+        }, 100)
       }
     } catch (error) {
       console.error('signIn exception:', error)
