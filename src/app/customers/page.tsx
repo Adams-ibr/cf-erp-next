@@ -19,11 +19,12 @@ interface Customer {
 export default function CustomersPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [customers, setCustomers] = useState<any[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -33,7 +34,7 @@ export default function CustomersPage() {
     if (status === 'authenticated') {
       fetchCustomers()
     }
-  }, [status])
+  }, [status, page, search])
 
   const fetchCustomers = async () => {
     setLoading(true)
@@ -47,6 +48,7 @@ export default function CustomersPage() {
       if (res.ok) {
         const data = await res.json()
         setCustomers(data.data || [])
+        setTotalCount(data.pagination?.total || 0)
         setTotalPages(data.pagination?.totalPages || 1)
       }
     } catch (error) {
@@ -70,146 +72,154 @@ export default function CustomersPage() {
     }
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return 'bg-emerald-100 text-emerald-700'
+      case 'INACTIVE': return 'bg-slate-100 text-slate-700'
+      case 'PROSPECT': return 'bg-amber-100 text-amber-700'
+      default: return 'bg-slate-100 text-slate-700'
+    }
+  }
+
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin"></div>
       </div>
     )
   }
 
   if (status === 'unauthenticated') {
-    return <div className="min-h-screen flex items-center justify-center">Redirecting...</div>
-  }
-
-  const renderTableBody = () => {
-    if (loading) {
-      return (
-        <tr>
-          <td colSpan={7} className="px-6 py-12 text-center">
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          </td>
-        </tr>
-      )
-    }
-
-    if (customers.length === 0) {
-      return (
-        <tr>
-          <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-            No customers found. <Link href="/customers/new" className="text-blue-600 hover:underline">Create one</Link>
-          </td>
-        </tr>
-      )
-    }
-
-    return customers.map((customer) => (
-      <tr key={customer.id} className="hover:bg-gray-50">
-        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.code}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{customer.name}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.email || '-'}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.phone || '-'}</td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            customer.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-            customer.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
-            customer.status === 'PROSPECT' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {customer.status}
-          </span>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {new Date(customer.created_at).toLocaleDateString()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-          <Link href={`/customers/${customer.id}`} className="text-blue-600 hover:text-blue-900 mr-3">View</Link>
-          <Link href={`/customers/${customer.id}/edit`} className="text-blue-600 hover:text-blue-900 ml-3">Edit</Link>
-          <button
-            onClick={() => handleDelete(customer.id)}
-            className="text-red-600 hover:text-red-900 ml-3"
-          >
-            Delete
-          </button>
-        </td>
-      </tr>
-    ))
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50">Redirecting...</div>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-slate-50 lg:pl-64">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-slate-100">
+        <div className="flex items-center justify-between h-16 px-6">
+          <h1 className="text-xl font-semibold text-slate-900">Customers</h1>
+        </div>
+      </header>
+
+      <main className="p-6 lg:p-8">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-            <p className="mt-1 text-gray-500">Manage your customers</p>
+            <h2 className="text-2xl font-bold text-slate-900">Customers</h2>
+            <p className="text-slate-500 mt-1">Manage your customer relationships</p>
           </div>
           <Link
             href="/customers/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-sm shadow-blue-500/25"
           >
-            <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
             Add Customer
           </Link>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search customers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md leading-5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100">
+            <div className="relative max-w-md">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input
+                type="text"
+                placeholder="Search customers..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all text-slate-900 placeholder-slate-400"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Customers Table */}
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {renderTableBody()}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Trade Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center">
+                      <div className="flex items-center justify-center gap-2 text-slate-500">
+                        <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin"></div>
+                        <span>Loading...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : customers.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center gap-3 text-slate-500">
+                        <svg className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <div>
+                          <p className="font-medium text-slate-700">No customers found</p>
+                          <p className="text-sm">Get started by adding your first customer</p>
+                        </div>
+                        <Link href="/customers/new" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                          Add Customer
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  customers.map((customer) => (
+                    <tr key={customer.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-slate-900">{customer.code}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{customer.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{customer.trade_name || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{customer.email || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{customer.phone || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(customer.status)}`}>
+                          {customer.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {new Date(customer.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Link href={`/customers/${customer.id}`} className="text-blue-600 hover:text-blue-900 mr-3 font-medium">View</Link>
+                        <Link href={`/customers/${customer.id}/edit`} className="text-slate-600 hover:text-slate-900 mr-3 font-medium">Edit</Link>
+                        <button
+                          onClick={() => handleDelete(customer.id)}
+                          className="text-red-600 hover:text-red-900 font-medium"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing page {page} of {totalPages}
+            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Showing page {page} of {totalPages} ({totalCount} total)
               </div>
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>
@@ -217,7 +227,7 @@ export default function CustomersPage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }
