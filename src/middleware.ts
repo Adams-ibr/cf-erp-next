@@ -1,6 +1,22 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { authOptions } from '@/lib/auth'
-import { getServerSession } from 'next-auth'
+import { jwtVerify } from 'jose'
+
+const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
+
+async function getSessionFromCookie(request: NextRequest) {
+  const token = request.cookies.get('next-auth.session-token')?.value 
+    || request.cookies.get('__session')?.value
+    || request.cookies.get('next-auth.callback-url')?.value
+  
+  if (!token) return null
+
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    return payload
+  } catch {
+    return null
+  }
+}
 
 export async function middleware(request: NextRequest) {
   // Skip auth for NextAuth endpoints
@@ -8,8 +24,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Get session using NextAuth
-  const session = await getServerSession(authOptions)
+  const session = await getSessionFromCookie(request)
 
   // Protect API routes (except auth)
   if (request.nextUrl.pathname.startsWith('/api/')) {
