@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
   // Skip auth for NextAuth endpoints
@@ -8,11 +7,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const session = await getServerSession(authOptions)
+  // Get token from JWT (works in edge runtime)
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  })
 
   // Protect API routes (except auth)
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    if (!session) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }
@@ -24,7 +27,7 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/shipments') ||
       request.nextUrl.pathname.startsWith('/invoices') ||
       request.nextUrl.pathname.startsWith('/quotes')) {
-    if (!session) {
+    if (!token) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
       return NextResponse.redirect(loginUrl)
