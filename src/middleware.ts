@@ -1,14 +1,15 @@
-import { getServerSession } from 'next-auth'
 import { NextResponse, type NextRequest } from 'next/server'
 import { authOptions } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
 
 export async function middleware(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-
   // Skip auth for NextAuth endpoints
   if (request.nextUrl.pathname.startsWith('/api/auth/')) {
     return NextResponse.next()
   }
+
+  // Get session using NextAuth
+  const session = await getServerSession(authOptions)
 
   // Protect API routes (except auth)
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -25,7 +26,9 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/invoices') ||
       request.nextUrl.pathname.startsWith('/quotes')) {
     if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+      return NextResponse.redirect(loginUrl)
     }
   }
 
