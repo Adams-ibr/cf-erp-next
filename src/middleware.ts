@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify, jwtDecrypt } from 'jose'
-import { createHash } from 'crypto'
 
-// Derive a 32-byte key from NEXTAUTH_SECRET
 const SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only'
-const JWT_SECRET = new TextEncoder().encode(createHash('sha256').update(SECRET).digest('hex').substring(0, 32))
+// Derive 32-byte key using Web Crypto API (works in edge runtime)
+const JWT_SECRET_KEY = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(SECRET))
+const JWT_SECRET = new Uint8Array(JWT_SECRET_KEY)
 
 async function getSessionFromCookie(request: NextRequest) {
   const possibleCookies = [
