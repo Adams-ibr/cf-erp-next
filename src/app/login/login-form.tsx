@@ -2,10 +2,9 @@
 
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const urlError = searchParams.get('error')
@@ -36,20 +35,17 @@ export default function LoginForm() {
         setError('Invalid email or password')
       } else if (result?.ok) {
         console.log('signIn ok, redirecting to:', callbackUrl)
-        // Try router first
-        router.push(callbackUrl)
-        router.refresh()
-        // Fallback to hard redirect after short delay
-        setTimeout(() => {
-          window.location.href = callbackUrl
-        }, 100)
+        console.log('result.url:', result.url)
+        // Use result.url if available, otherwise callbackUrl
+        const redirectUrl = result.url || callbackUrl
+        console.log('Using redirect URL:', redirectUrl)
+        // Hard redirect immediately
+        window.location.href = redirectUrl
       } else {
         console.log('Unexpected result:', result)
-        router.push(callbackUrl)
-        router.refresh()
-        setTimeout(() => {
-          window.location.href = callbackUrl
-        }, 100)
+        const redirectUrl = result.url || callbackUrl
+        console.log('Using redirect URL:', redirectUrl)
+        window.location.href = redirectUrl
       }
     } catch (error) {
       console.error('signIn exception:', error)
