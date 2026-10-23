@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify, jwtDecrypt } from 'jose'
+import { createHash } from 'crypto'
 
-const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only')
+// Derive a 32-byte key from NEXTAUTH_SECRET
+const SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only'
+const JWT_SECRET = new TextEncoder().encode(createHash('sha256').update(SECRET).digest('hex').substring(0, 32))
 
 async function getSessionFromCookie(request: NextRequest) {
   const possibleCookies = [
