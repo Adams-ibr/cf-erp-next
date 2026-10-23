@@ -1,44 +1,13 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { getServerSession } from 'next-auth'
 import { NextResponse, type NextRequest } from 'next/server'
+import { authOptions } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    })
-
-  // Refresh session if expired
-  const { data: { session } } = await supabase.auth.getSession()
+  const session = await getServerSession(authOptions)
 
   // Skip auth for NextAuth endpoints
   if (request.nextUrl.pathname.startsWith('/api/auth/')) {
-    return response
+    return NextResponse.next()
   }
 
   // Protect API routes (except auth)
@@ -60,7 +29,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
