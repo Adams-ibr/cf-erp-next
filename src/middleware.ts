@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { jwtVerify } from 'jose'
+import { jwtVerify, decrypt } from 'jose'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only')
 
@@ -12,8 +12,6 @@ async function getSessionFromCookie(request: NextRequest) {
     '__Secure-authjs.session-token',
     '__Host-authjs.session-token',
     'authjs.session-token',
-    '__Secure-next-auth.callback-url',
-    '__Host-next-auth.callback-url',
   ]
   
   console.log('Middleware: Checking cookies:', request.cookies.getAll().map(c => c.name))
@@ -22,12 +20,23 @@ async function getSessionFromCookie(request: NextRequest) {
     const token = request.cookies.get(cookieName)?.value
     if (token) {
       console.log('Middleware: Found token in cookie:', cookieName)
+      
       try {
+        // First try: verify as JWT (if unencrypted)
         const { payload } = await jwtVerify(token, JWT_SECRET)
         console.log('Middleware: JWT verified, payload:', payload)
         return payload
-      } catch (e) {
-        console.log('Middleware: JWT verify failed for', cookieName, e)
+      } catch (e1) {
+        console.log('Middleware: JWT verify failed, trying decrypt...', e1)
+      }
+      
+      try {
+        // Second try: decrypt (NextAuth encrypts session tokens)
+        const decrypted = await decrypt(token, JWT_SECRET)
+        console.log('Middleware: Decrypted payload:', decrypted.payload)
+        return decrypted.payload
+      } catch (e2) {
+        console.log('Middleware: Decrypt failed for', cookieName, e2)
       }
     }
   }
