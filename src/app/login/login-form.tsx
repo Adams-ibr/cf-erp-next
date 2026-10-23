@@ -26,7 +26,7 @@ export default function LoginForm() {
         password,
         redirect: false,
         callbackUrl,
-      })
+      }) as { error?: string; ok?: boolean; url?: string } | undefined
 
       console.log('signIn result:', result)
 
@@ -36,14 +36,12 @@ export default function LoginForm() {
       } else if (result?.ok) {
         console.log('signIn ok, redirecting to:', callbackUrl)
         console.log('result.url:', result.url)
-        // Use result.url if available, otherwise callbackUrl
         const redirectUrl = result.url || callbackUrl
         console.log('Using redirect URL:', redirectUrl)
-        // Hard redirect immediately
         window.location.href = redirectUrl
       } else {
         console.log('Unexpected result:', result)
-        const redirectUrl = result.url || callbackUrl
+        const redirectUrl = result?.url || callbackUrl
         console.log('Using redirect URL:', redirectUrl)
         window.location.href = redirectUrl
       }
