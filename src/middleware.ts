@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { jwtVerify, JWTDecrypt } from 'jose'
+import { jwtVerify, jwtDecrypt } from 'jose'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only')
 
@@ -26,16 +26,16 @@ async function getSessionFromCookie(request: NextRequest) {
         console.log('Middleware: JWT verified, payload:', payload)
         return payload
       } catch (e1) {
-        console.log('Middleware: JWT verify failed, trying JWTDecrypt...', e1)
+        console.log('Middleware: JWT verify failed, trying jwtDecrypt...', e1)
       }
       
       try {
-        // Try decrypt with jose JWTDecrypt
-        const { payload } = await JWTDecrypt(token, JWT_SECRET)
+        // Try decrypt with jose jwtDecrypt
+        const { payload } = await jwtDecrypt(token, JWT_SECRET)
         console.log('Middleware: Decrypted payload:', payload)
         return payload
       } catch (e2) {
-        console.log('Middleware: JWTDecrypt failed for', cookieName, e2)
+        console.log('Middleware: jwtDecrypt failed for', cookieName, e2)
       }
     }
   }
