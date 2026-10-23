@@ -4,31 +4,52 @@ import { jwtVerify } from 'jose'
 const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
 
 async function getSessionFromCookie(request: NextRequest) {
-  const token = request.cookies.get('next-auth.session-token')?.value 
-    || request.cookies.get('__session')?.value
-    || request.cookies.get('next-auth.callback-url')?.value
+  // NextAuth v5 cookie names
+  const possibleCookies = [
+    'next-auth.session-token',
+    '__session',
+    'next-auth.callback-url',
+    'authjs.session-token',
+    'authjs.callback-url'
+  ]
   
-  if (!token) return null
-
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload
-  } catch {
-    return null
+  console.log('Middleware: Checking cookies:', request.cookies.getAll().map(c => c.name))
+  
+  for (const cookieName of possibleCookies) {
+    const token = request.cookies.get(cookieName)?.value
+    if (token) {
+      console.log('Middleware: Found token in cookie:', cookieName)
+      try {
+        const { payload } = await jwtVerify(token, JWT_SECRET)
+        console.log('Middleware: JWT verified, payload:', payload)
+        return payload
+      } catch (e) {
+        console.log('Middleware: JWT verify failed for', cookieName, e)
+      }
+    }
   }
+  
+  console.log('Middleware: No valid token found')
+  return null
 }
 
 export async function middleware(request: NextRequest) {
+  console.log('Middleware: Processing', request.nextUrl.pathname)
+  
   // Skip auth for NextAuth endpoints
   if (request.nextUrl.pathname.startsWith('/api/auth/')) {
+    console.log('Middleware: Skipping auth endpoint')
     return NextResponse.next()
   }
 
   const session = await getSessionFromCookie(request)
 
+  console.log('Middleware: Session result:', session ? 'FOUND' : 'NOT FOUND')
+
   // Protect API routes (except auth)
   if (request.nextUrl.pathname.startsWith('/api/')) {
     if (!session) {
+      console.log('Middleware: API route, no session, returning 401')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }
@@ -41,10 +62,12 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/invoices') ||
       request.nextUrl.pathname.startsWith('/quotes')) {
     if (!session) {
+      console.log('Middleware: Protected route, no session, redirecting to login')
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
       return NextResponse.redirect(loginUrl)
     }
+    console.log('Middleware: Protected route, session found, allowing access')
   }
 
   return NextResponse.next()
