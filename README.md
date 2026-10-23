@@ -64,3 +64,4 @@ src/app/api/
 - `npm run start` - Production server
 - `npm run lint` - Run ESLint
 - `npm run test` - Run tests# Rebuild trigger
+# Force rebuild
