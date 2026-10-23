@@ -4,13 +4,16 @@ import { jwtVerify } from 'jose'
 const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only')
 
 async function getSessionFromCookie(request: NextRequest) {
-  // NextAuth v5 cookie names
+  // NextAuth v5 cookie names (with Secure/Host prefixes)
   const possibleCookies = [
+    '__Secure-next-auth.session-token',
+    '__Host-next-auth.session-token',
     'next-auth.session-token',
-    '__session',
-    'next-auth.callback-url',
+    '__Secure-authjs.session-token',
+    '__Host-authjs.session-token',
     'authjs.session-token',
-    'authjs.callback-url'
+    '__Secure-next-auth.callback-url',
+    '__Host-next-auth.callback-url',
   ]
   
   console.log('Middleware: Checking cookies:', request.cookies.getAll().map(c => c.name))
