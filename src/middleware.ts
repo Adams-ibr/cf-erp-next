@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
+const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only')
 
 async function getSessionFromCookie(request: NextRequest) {
   // NextAuth v5 cookie names
