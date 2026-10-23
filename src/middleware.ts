@@ -1,10 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { jwtVerify, decrypt } from 'jose'
+import { jwtVerify, JWTDecrypt } from 'jose'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only')
 
 async function getSessionFromCookie(request: NextRequest) {
-  // NextAuth v5 cookie names (with Secure/Host prefixes)
   const possibleCookies = [
     '__Secure-next-auth.session-token',
     '__Host-next-auth.session-token',
@@ -22,21 +21,21 @@ async function getSessionFromCookie(request: NextRequest) {
       console.log('Middleware: Found token in cookie:', cookieName)
       
       try {
-        // First try: verify as JWT (if unencrypted)
+        // Try JWT verify first
         const { payload } = await jwtVerify(token, JWT_SECRET)
         console.log('Middleware: JWT verified, payload:', payload)
         return payload
       } catch (e1) {
-        console.log('Middleware: JWT verify failed, trying decrypt...', e1)
+        console.log('Middleware: JWT verify failed, trying JWTDecrypt...', e1)
       }
       
       try {
-        // Second try: decrypt (NextAuth encrypts session tokens)
-        const decrypted = await decrypt(token, JWT_SECRET)
-        console.log('Middleware: Decrypted payload:', decrypted.payload)
-        return decrypted.payload
+        // Try decrypt with jose JWTDecrypt
+        const { payload } = await JWTDecrypt(token, JWT_SECRET)
+        console.log('Middleware: Decrypted payload:', payload)
+        return payload
       } catch (e2) {
-        console.log('Middleware: Decrypt failed for', cookieName, e2)
+        console.log('Middleware: JWTDecrypt failed for', cookieName, e2)
       }
     }
   }
